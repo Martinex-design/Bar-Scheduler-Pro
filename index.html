@@ -1,0 +1,4253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bar Staff Scheduler Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --bar1: #3498db;
+      --bar2: #e74c3c;
+      --day-shift: #f39c12;
+      --night-shift: #9b59b6;
+      --custom-shift: #16a085;
+      --events: #e67e22;
+      --manager: #2c3e50;
+      --bartender: #27ae60;
+      --server: #3498db;
+      --security: #34495e;
+      --kitchen: #e67e22;
+      --vacation: #e74c3c;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    
+    .week-selector {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .week-selector button {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .week-selector button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .current-week {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 20px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .tab {
+      background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+      border: none;
+      padding: 14px 28px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+    
+    .schedule-section {
+      display: none;
+    }
+    
+    .schedule-section.active {
+      display: block;
+    }
+    
+    .bar-header {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 18px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+    
+    .bar-header.bar1 {
+      background: linear-gradient(135deg, var(--bar1), #2980b9);
+    }
+    
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 150px repeat(7, 1fr);
+      gap: 2px;
+      background: #7f8c8d;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    
+    .day-header {
+      background: linear-gradient(135deg, #34495e, #2c3e50);
+      color: white;
+      padding: 15px 5px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    
+    .shift-label {
+      background: #2c3e50;
+      color: white;
+      padding: 15px 5px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+    }
+    
+    .shift-label.row-events {
+      background: linear-gradient(135deg, var(--events), #d68910);
+      min-height: 60px;
+    }
+    
+    .shift-label.row-day {
+      background: linear-gradient(135deg, var(--day-shift), #e67e22);
+    }
+    
+    .shift-label.row-night {
+      background: linear-gradient(135deg, var(--night-shift), #8e44ad);
+    }
+    
+    .shift-label.row-custom {
+      background: linear-gradient(135deg, var(--custom-shift), #138d75);
+    }
+    
+    .shift-cell {
+      background: white;
+      padding: 10px;
+      min-height: 100px;
+      position: relative;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .shift-cell.row-events {
+      background: linear-gradient(135deg, #fff5e6, #ffebcc);
+      min-height: 60px;
+    }
+    
+    .shift-cell.row-day {
+      background: linear-gradient(135deg, #fff9e6, #fff5d6);
+    }
+    
+    .shift-cell.row-night {
+      background: linear-gradient(135deg, #f8f5ff, #f0e6ff);
+    }
+    
+    .shift-cell.row-custom {
+      background: linear-gradient(135deg, #f0fffc, #e6fff9);
+    }
+    
+    .shift-cell.drag-over {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb) !important;
+      box-shadow: inset 0 0 20px rgba(40, 167, 69, 0.3);
+      transform: scale(1.02);
+    }
+    
+    .staff-assignment {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    
+    .staff-assignment.dragging {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+    
+    .staff-assignment:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .staff-assignment.role-manager {
+      background: linear-gradient(135deg, var(--manager), #1a252f);
+    }
+    
+    .staff-assignment.role-bartender {
+      background: linear-gradient(135deg, var(--bartender), #1e8449);
+    }
+    
+    .staff-assignment.role-server {
+      background: linear-gradient(135deg, var(--server), #2874a6);
+    }
+    
+    .staff-assignment.role-security {
+      background: linear-gradient(135deg, var(--security), #212f3c);
+    }
+    
+    .staff-assignment.role-kitchen {
+      background: linear-gradient(135deg, var(--kitchen), #ca6f1e);
+    }
+    
+    .remove-btn {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 6px;
+    }
+    
+    .remove-btn:hover {
+      background: rgba(255,255,255,0.5);
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .control-panel {
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .control-panel h3 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .form-group select,
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group input[type="time"],
+    .form-group input[type="number"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e1e8ed;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-group input[type="range"] {
+      width: 100%;
+      margin-right: 10px;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+    
+    .btn-info {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+    
+    .btn-warning {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    .staff-pool {
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      padding: 25px;
+      border-radius: 15px;
+      margin-top: 30px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .staff-pool h3 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 10px;
+    }
+    
+    .staff-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    .staff-card {
+      background: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      border: 2px solid #e1e8ed;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    
+    .staff-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .staff-card.dragging {
+      opacity: 0.5;
+    }
+    
+    .staff-card.touch-selected {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      transform: scale(1.05);
+    }
+    
+    .shift-cell.touch-assignable {
+      cursor: pointer;
+      box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.3);
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.3); }
+      50% { box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.5); }
+    }
+    
+    .touch-mode-banner {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .touch-mode-banner.active {
+      display: flex;
+    }
+    
+    .touch-mode-banner button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .touch-mode-banner button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .staff-info {
+      font-size: 13px;
+    }
+    
+    .staff-name {
+      font-weight: bold;
+      color: #2c3e50;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .staff-details {
+      color: #7f8c8d;
+      font-size: 11px;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .role-manager { background: var(--manager); }
+    .role-bartender { background: var(--bartender); }
+    .role-server { background: var(--server); }
+    .role-security { background: var(--security); }
+    .role-kitchen { background: var(--kitchen); }
+    
+    .staff-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .staff-action-btn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .staff-action-btn:hover {
+      background: #c0392b;
+    }
+    
+    .analytics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+    
+    .stat-label {
+      color: #7f8c8d;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #27ae60, #229954);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(-50px);
+      transition: all 0.5s ease;
+      z-index: 1000;
+      font-weight: 600;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .toast.error {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .toast.warning {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      font-size: 20px;
+      font-weight: bold;
+      padding: 25px 40px;
+      border: 4px solid #d35400;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      animation: shake 0.5s ease-in-out;
+      z-index: 10000;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 15px;
+    }
+
+    .calendar-header h3 {
+      color: #2c3e50;
+      font-size: 1.4rem;
+      margin: 0;
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 10px;
+    }
+
+    .calendar-nav button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .calendar-nav button:hover {
+      transform: translateY(-2px);
+    }
+
+    .cal-day-name {
+      text-align: center;
+      font-weight: bold;
+      color: #2c3e50;
+      padding: 10px;
+      background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .cal-day {
+      min-height: 120px;
+      padding: 10px;
+      border: 2px solid #e1e8ed;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cal-day:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .cal-day.today {
+      border-color: var(--events);
+      background: linear-gradient(135deg, #fff5e6, #ffffff);
+      border-width: 3px;
+    }
+
+    .cal-day.has-vacation {
+      background: linear-gradient(135deg, #ffe6e6, #ffffff);
+    }
+
+    .cal-day-num {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+
+    .cal-event {
+      padding: 4px 8px;
+      margin: 3px 0;
+      border-radius: 8px;
+      font-size: 11px;
+      color: white;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: move;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .cal-event:hover {
+      transform: scale(1.05);
+    }
+
+    .cal-event.bar1 {
+      background: linear-gradient(135deg, var(--bar1), #2980b9);
+    }
+
+    .cal-event.bar2 {
+      background: linear-gradient(135deg, var(--bar2), #c0392b);
+    }
+
+    .cal-event.vacation {
+      background: linear-gradient(135deg, var(--vacation), #c0392b);
+      cursor: default;
+    }
+
+    .cal-event.dragging {
+      opacity: 0.5;
+    }
+
+    .cal-event-delete {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 4px;
+    }
+
+    .cal-event-delete:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .cal-legend {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 15px;
+      flex-wrap: wrap;
+    }
+
+    .cal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .cal-legend-color {
+      width: 30px;
+      height: 20px;
+      border-radius: 5px;
+    }
+
+    .preferences-table {
+      width: 100%;
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+      margin-top: 20px;
+    }
+
+    .preferences-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .preferences-table th {
+      background: linear-gradient(135deg, #34495e, #2c3e50);
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .preferences-table td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #e1e8ed;
+    }
+
+    .preferences-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .pref-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .all-prefs-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .staff-pref-card {
+      background: white;
+      border: 2px solid #e1e8ed;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .staff-pref-card h4 {
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pref-detail {
+      font-size: 13px;
+      color: #34495e;
+      margin: 8px 0;
+      padding: 6px 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+
+    .pref-detail strong {
+      color: #2c3e50;
+      display: inline-block;
+      min-width: 100px;
+    }
+
+    .pref-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      margin: 2px;
+    }
+
+    .pref-badge.off {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .pref-badge.day {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+
+    .pref-badge.night {
+      background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    }
+
+    .no-prefs {
+      color: #95a5a6;
+      font-style: italic;
+      text-align: center;
+      padding: 40px;
+      font-size: 16px;
+    }
+
+    .time-inputs {
+      display: flex;
+      gap: 10px;
+    }
+
+    .time-inputs input {
+      flex: 1;
+    }
+
+    .recurring-options {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 2px solid #e1e8ed;
+    }
+    .recurring-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .recurring-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .recurring-toggle label {
+      font-weight: 600;
+      color: #2c3e50;
+      cursor: pointer;
+    }
+    .recurring-details {
+      display: none;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+    }
+    .recurring-details.active {
+      display: block;
+    }
+
+        @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        padding: 10px;
+        max-width: 100%;
+      }
+
+      .header {
+        margin-bottom: 5px;
+      }
+
+      .header h1 {
+        font-size: 1rem;
+        margin-bottom: 3px;
+      }
+
+      .week-selector {
+        margin-bottom: 5px;
+      }
+
+      .current-week {
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+
+      .tabs, .controls, .btn, button, .staff-pool, .analytics {
+        display: none !important;
+      }
+
+      .schedule-section#schedule {
+        display: block !important;
+      }
+
+      .schedule-section:not(#schedule) {
+        display: none !important;
+      }
+
+      /* Hide the normal schedule grids */
+      .schedule-grid, .bar-header {
+        display: none !important;
+      }
+
+      /* Show print-specific layout */
+      #printLayout {
+        display: block !important;
+      }
+
+      .staff-actions, .event-actions {
+        display: none !important;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .schedule-grid {
+        grid-template-columns: 100px repeat(7, 1fr);
+        font-size: 11px;
+        overflow-x: auto;
+      }
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .calendar {
+        gap: 5px;
+      }
+      .cal-day {
+        min-height: 80px;
+        padding: 5px;
+      }
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      .week-selector {
+        font-size: 14px;
+      }
+      .staff-assignment {
+        font-size: 10px;
+        padding: 5px 8px;
+      }
+    }
+
+    /* Print layout styles */
+    #printLayout {
+      display: none;
+    }
+
+    .print-bars-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .print-bar-section {
+      page-break-inside: avoid;
+    }
+
+    .print-bar-title {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .print-bar-title.bar2 {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .print-schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 10px;
+    }
+
+    .print-schedule-table th {
+      background: #34495e;
+      color: white;
+      padding: 5px 4px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 9px;
+    }
+
+    .print-schedule-table td {
+      padding: 5px 4px;
+      border-bottom: 1px solid #ecf0f1;
+      vertical-align: top;
+    }
+
+    .print-schedule-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .print-day-cell {
+      font-weight: bold;
+      color: #2c3e50;
+      min-width: 50px;
+      font-size: 9px;
+    }
+
+    .print-event-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 8px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #e67e22, #d68910);
+      color: white;
+      margin: 1px 2px 1px 0;
+    }
+
+    .print-staff-item {
+      padding: 2px 0;
+      color: #2c3e50;
+      font-size: 9px;
+    }
+
+    .print-role-badge {
+      display: inline-block;
+      padding: 1px 4px;
+      border-radius: 6px;
+      font-size: 7px;
+      font-weight: 600;
+      color: white;
+      margin-left: 4px;
+    }
+
+    .print-role-badge.role-manager { background: #2c3e50; }
+    .print-role-badge.role-bartender { background: #27ae60; }
+    .print-role-badge.role-server { background: #3498db; }
+    .print-role-badge.role-security { background: #34495e; }
+    .print-role-badge.role-kitchen { background: #e67e22; }
+
+    .print-time-info {
+      color: #7f8c8d;
+      font-size: 8px;
+      margin-left: 4px;
+    }
+
+    .print-no-staff {
+      color: #95a5a6;
+      font-style: italic;
+      font-size: 8px;
+    }
+
+    .recurring-options {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 2px solid #e1e8ed;
+    }
+    .recurring-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .recurring-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .recurring-toggle label {
+      font-weight: 600;
+      color: #2c3e50;
+      cursor: pointer;
+    }
+    .recurring-details {
+      display: none;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+    }
+    .recurring-details.active {
+      display: block;
+    }
+
+    .staff-assignment-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .staff-assignment-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .staff-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex: 1;
+    }
+    
+    .staff-name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 15px;
+    }
+    
+    .staff-role-badge {
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 11px;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .staff-role-badge.manager { background: var(--manager); }
+    .staff-role-badge.bartender { background: var(--bartender); }
+    .staff-role-badge.server { background: var(--server); }
+    .staff-role-badge.security { background: var(--security); }
+    .staff-role-badge.kitchen { background: var(--kitchen); }
+    
+    .staff-bar-badge {
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 11px;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .staff-bar-badge.bar1 { background: var(--bar1); }
+    .staff-bar-badge.bar2 { background: var(--bar2); }
+    .staff-bar-badge.both { background: linear-gradient(135deg, var(--bar1), var(--bar2)); }
+    
+    .assignment-count {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .count-badge {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 16px;
+      min-width: 60px;
+      text-align: center;
+    }
+    
+    .count-label {
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+    
+    .no-assignments {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    .staff-availability-section {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .staff-availability-section h3 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    .availability-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .availability-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 15px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      transition: all 0.2s ease;
+    }
+
+    .availability-item.available {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb);
+      border-left: 4px solid #28a745;
+    }
+
+    .availability-item.on-vacation {
+      background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+      border-left: 4px solid #dc3545;
+    }
+
+    .availability-item .name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .availability-item .status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .availability-item .status.available {
+      background: #28a745;
+      color: white;
+    }
+
+    .availability-item .status.vacation {
+      background: #dc3545;
+      color: white;
+    }
+
+    .conflict-warning {
+      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .conflict-warning .icon {
+      font-size: 24px;
+    }
+
+    .conflict-warning .message {
+      flex: 1;
+      color: #856404;
+      font-weight: 600;
+    }
+
+    .conflict-error {
+      background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+      border-left: 4px solid #dc3545;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .conflict-error .icon {
+      font-size: 24px;
+    }
+
+    .conflict-error .message {
+      flex: 1;
+      color: #721c24;
+      font-weight: 600;
+    }
+
+    .undo-redo-controls {
+      display: flex;
+      gap: 10px;
+      margin-left: 20px;
+    }
+
+    .undo-redo-controls button {
+      background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .undo-redo-controls button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .undo-redo-controls button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+        @media print {
+      .print-bars-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 15px;
+        border-radius: 15px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .week-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .week-selector button {
+        width: 100%;
+        padding: 12px;
+      }
+
+      .current-week {
+        font-size: 16px;
+        padding: 8px 15px;
+      }
+
+      .tabs {
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .schedule-grid {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .bar-header {
+        font-size: 1.2rem;
+        padding: 12px;
+      }
+
+      .analytics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat-card {
+        padding: 15px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .availability-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .staff-assignment-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .staff-info {
+        flex-wrap: wrap;
+      }
+
+      .undo-redo-controls {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .undo-redo-controls button {
+        flex: 1;
+      }
+
+      .control-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .staff-pool {
+        margin-top: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 15px;
+        border-radius: 10px;
+      }
+      
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .week-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .week-selector button {
+        width: 100%;
+        padding: 10px 20px;
+      }
+      
+      .tabs {
+        gap: 5px;
+      }
+      
+      .tab {
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+      
+      .schedule-grid {
+        grid-template-columns: 80px repeat(7, minmax(70px, 1fr));
+        font-size: 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .day-header {
+        font-size: 11px;
+        padding: 10px 3px;
+      }
+      
+      .shift-label {
+        font-size: 11px;
+        padding: 10px 3px;
+      }
+      
+      .shift-cell {
+        min-height: 80px;
+        padding: 5px;
+      }
+      
+      .staff-assignment {
+        font-size: 9px;
+        padding: 4px 6px;
+        margin-bottom: 3px;
+      }
+      
+      .remove-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 14px;
+        line-height: 18px;
+      }
+      
+      .analytics {
+        grid-template-columns: 1fr;
+      }
+
+      .staff-assignment-item {
+        padding: 12px;
+      }
+
+      .count-badge {
+        font-size: 14px;
+        padding: 6px 12px;
+      }
+      
+      .control-panel {
+        padding: 15px;
+      }
+      
+      .control-panel button {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      
+      .staff-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-group {
+        margin-bottom: 12px;
+      }
+      
+      /* Touch-friendly tap zones */
+      .shift-cell {
+        min-height: 100px;
+      }
+      
+      .staff-card {
+        padding: 12px;
+        margin-bottom: 8px;
+      }
+    }
+    
+    /* Login Screen Styles */
+    .login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .login-overlay.hidden {
+      display: none;
+    }
+    
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    
+    .login-box h2 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    
+    .login-box p {
+      color: #7f8c8d;
+      margin-bottom: 30px;
+    }
+    
+    .login-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ecf0f1;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+    
+    .login-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .login-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .login-error {
+      color: #e74c3c;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .login-error.show {
+      display: block;
+    }
+    
+    .logout-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(231, 76, 60, 0.9);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 1000;
+      transition: all 0.3s;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(231, 76, 60, 1);
+      transform: translateY(-2px);
+    }
+    
+    .app-container.locked {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <h2>🔒 Bar Scheduler</h2>
+      <p>Enter password to access</p>
+      <input 
+        type="password" 
+        id="passwordInput" 
+        class="login-input" 
+        placeholder="Enter password"
+        autocomplete="current-password"
+      >
+      <button class="login-btn" id="loginBtn">Login</button>
+      <div class="login-error" id="loginError">❌ Incorrect password</div>
+    </div>
+  </div>
+  
+  <!-- Logout Button -->
+  <button class="logout-btn" id="logoutBtn" style="display: none;">🚪 Logout</button>
+  
+  <div class="app-container locked" id="appContainer">
+  <div class="toast" id="toast"></div>
+  <div class="touch-mode-banner" id="touchModeBanner">
+    <span id="touchModeText">👆 Tap a shift to assign</span>
+    <button id="cancelTouchMode">Cancel</button>
+  </div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🍺 Bar Staff Scheduler Pro</h1>
+      <div class="week-selector">
+        <button id="prevWeekBtn">← Previous Week</button>
+        <div class="current-week" id="currentWeek">Week of</div>
+        <button id="nextWeekBtn">Next Week →</button>
+        <div class="undo-redo-controls">
+          <button id="undoBtn" disabled title="Undo last change">↶ Undo</button>
+          <button id="redoBtn" disabled title="Redo">↷ Redo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="schedule">Schedule</button>
+      <button class="tab" data-tab="staff">Staff Management</button>
+      <button class="tab" data-tab="preferences">Preferences</button>
+      <button class="tab" data-tab="vacations">Vacations</button>
+      <button class="tab" data-tab="events">Events Calendar</button>
+      <button class="tab" data-tab="analytics">Analytics</button>
+    </div>
+
+    <div id="schedule" class="schedule-section active">
+      <div id="conflictWarnings"></div>
+
+      <div class="bar-header bar1">Bar 1 Schedule</div>
+      <div class="schedule-grid" id="bar1Schedule"></div>
+
+      <div class="bar-header bar2">Bar 2 Schedule</div>
+      <div class="schedule-grid" id="bar2Schedule"></div>
+
+      <div class="staff-availability-section">
+        <h3>👥 Staff Availability This Week</h3>
+        <div class="availability-grid" id="availabilityGrid"></div>
+      </div>
+
+      <div class="controls">
+        <div class="control-panel">
+          <h3>Quick Assign</h3>
+          <div class="form-group">
+            <label for="quickStaff">Staff Member:</label>
+            <select id="quickStaff">
+              <option value="">Select Staff...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="quickBar">Bar:</label>
+            <select id="quickBar">
+              <option value="1">Bar 1</option>
+              <option value="2">Bar 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="quickDay">Day:</label>
+            <select id="quickDay">
+              <option>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+              <option>Saturday</option>
+              <option>Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="quickShift">Shift:</label>
+            <select id="quickShift">
+              <option value="Day">Day Shift</option>
+              <option value="Night">Night Shift</option>
+              <option value="Custom">Custom Shift</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Shift Time:</label>
+            <div class="time-inputs">
+              <input type="time" id="quickTimeStart" value="09:00">
+              <input type="time" id="quickTimeEnd" value="17:00">
+            </div>
+          </div>
+          <button class="btn" id="quickAssignBtn">Assign to Schedule</button>
+        </div>
+
+        <div class="control-panel">
+          <h3>Smart Scheduling</h3>
+          <div class="form-group">
+            <label for="dayStaff">Day Staff Target:</label>
+            <input type="range" id="dayStaff" min="1" max="4" value="2">
+            <span id="dayStaffValue">2 staff</span>
+          </div>
+          <div class="form-group">
+            <label for="nightStaff">Night Staff Target:</label>
+            <input type="range" id="nightStaff" min="1" max="4" value="3">
+            <span id="nightStaffValue">3 staff</span>
+          </div>
+          <button class="btn btn-success" id="autoScheduleBtn">Generate Auto-Schedule</button>
+        </div>
+
+        <div class="control-panel">
+          <h3>Actions</h3>
+          <button class="btn btn-info" id="copyPrevBtn">Copy Previous Week</button>
+          <button class="btn btn-danger" id="clearWeekBtn">Clear This Week</button>
+          <button class="btn btn-info" id="printBtn">Print Schedule</button>
+          <button class="btn btn-warning" id="sendScheduleBtn">Email Schedule</button>
+        </div>
+      </div>
+
+      <div id="printLayout"></div>
+    </div>
+
+    <div id="staff" class="schedule-section">
+      <div class="control-panel">
+        <h3>Add New Staff Member</h3>
+        <div class="form-group">
+          <label for="newName">Name:</label>
+          <input type="text" id="newName" placeholder="Enter name">
+        </div>
+        <div class="form-group">
+          <label for="newRole">Role:</label>
+          <select id="newRole">
+            <option value="Manager">Manager</option>
+            <option value="Bartender">Bartender</option>
+            <option value="Server">Server</option>
+            <option value="Security">Security</option>
+            <option value="Kitchen">Kitchen</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="newBar">Assigned Bar:</label>
+          <select id="newBar">
+            <option value="Both">Both</option>
+            <option value="1">Bar 1</option>
+            <option value="2">Bar 2</option>
+          </select>
+        </div>
+        <button class="btn btn-success" id="addStaffBtn">Add Staff Member</button>
+      </div>
+
+      <div class="staff-pool">
+        <h3>Current Staff</h3>
+        <div class="staff-list" id="currentStaffList"></div>
+      </div>
+
+      <div class="control-panel">
+        <button class="btn btn-danger" id="resetDataBtn">Reset All Data</button>
+      </div>
+    </div>
+
+    <div id="preferences" class="schedule-section">
+      <div class="control-panel">
+        <h3>Staff Preferences</h3>
+        <div class="form-group">
+          <label for="prefStaff">Select Staff Member:</label>
+          <select id="prefStaff">
+            <option value="">Select Staff...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="preferences-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Monday</th>
+              <th>Tuesday</th>
+              <th>Wednesday</th>
+              <th>Thursday</th>
+              <th>Friday</th>
+              <th>Saturday</th>
+              <th>Sunday</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Preferred Off</strong></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Monday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Tuesday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Wednesday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Thursday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Friday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Saturday" data-type="off"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Sunday" data-type="off"></td>
+            </tr>
+            <tr>
+              <td><strong>Day Shift Only</strong></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Monday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Tuesday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Wednesday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Thursday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Friday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Saturday" data-type="dayOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Sunday" data-type="dayOnly"></td>
+            </tr>
+            <tr>
+              <td><strong>Night Shift Only</strong></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Monday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Tuesday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Wednesday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Thursday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Friday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Saturday" data-type="nightOnly"></td>
+              <td><input type="checkbox" class="pref-checkbox" data-day="Sunday" data-type="nightOnly"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="controls">
+        <div class="control-panel">
+          <button class="btn btn-success" id="savePrefBtn">Save Preferences</button>
+          <button class="btn btn-danger" id="deletePrefBtn">Clear Preferences</button>
+        </div>
+      </div>
+
+      <div class="staff-pool">
+        <h3>View All Staff Preferences</h3>
+        <div id="allPreferencesView"></div>
+      </div>
+    </div>
+
+    <div id="vacations" class="schedule-section">
+      <div class="controls">
+        <div class="control-panel">
+          <h3>Add Vacation/Time Off</h3>
+          <div class="form-group">
+            <label for="vacStaff">Staff Member:</label>
+            <select id="vacStaff">
+              <option value="">Select Staff...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="vacStartDate">Start Date:</label>
+            <input type="date" id="vacStartDate">
+          </div>
+          <div class="form-group">
+            <label for="vacEndDate">End Date:</label>
+            <input type="date" id="vacEndDate">
+          </div>
+          <div class="form-group">
+            <label for="vacReason">Reason (optional):</label>
+            <input type="text" id="vacReason" placeholder="Vacation, sick leave, etc.">
+          </div>
+          <button class="btn btn-success" id="addVacationBtn">Add Vacation</button>
+        </div>
+      </div>
+
+      <div class="calendar-header">
+        <button class="calendar-nav" id="vacPrevMonthBtn">← Previous</button>
+        <h3 id="vacCurrentMonth">Month Year</h3>
+        <button class="calendar-nav" id="vacNextMonthBtn">Next →</button>
+      </div>
+      <div class="calendar" id="vacationCalendar"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item">
+          <div class="cal-legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+          <span>Vacation/Time Off</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="events" class="schedule-section">
+      <div class="controls">
+        <div class="control-panel">
+          <h3>Add Event</h3>
+          <div class="form-group">
+            <label for="eventBar">Bar:</label>
+            <select id="eventBar">
+              <option value="1">Bar 1</option>
+              <option value="2">Bar 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="eventDate">Event Date:</label>
+            <input type="date" id="eventDate">
+          </div>
+          <div class="form-group">
+            <label for="eventTitle">Event Name:</label>
+            <input type="text" id="eventTitle" placeholder="Special event, live music, etc.">
+          </div>
+          <div class="form-group">
+            <label for="eventTime">Time (optional):</label>
+            <input type="text" id="eventTime" placeholder="8:00 PM">
+          </div>
+          <button class="btn btn-success" id="addEventBtn">Add Event</button>
+          <div class="recurring-options">
+            <div class="recurring-toggle">
+              <input type="checkbox" id="recurringCheckbox">
+              <label for="recurringCheckbox">🔁 Recurring Event</label>
+            </div>
+            <div class="recurring-details" id="recurringDetails">
+              <div class="form-group">
+                <label>Frequency:</label>
+                <select id="recurringFrequency">
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Until:</label>
+                <input type="date" id="recurringEndDate">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calendar-header">
+        <button class="calendar-nav" id="prevMonthBtn">← Previous</button>
+        <h3 id="currentMonth">Month Year</h3>
+        <button class="calendar-nav" id="nextMonthBtn">Next →</button>
+      </div>
+      <div class="calendar" id="eventCalendar"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item">
+          <div class="cal-legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+          <span>Bar 1 Event</span>
+        </div>
+        <div class="cal-legend-item">
+          <div class="cal-legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+          <span>Bar 2 Event</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="analytics" class="schedule-section">
+      <div class="analytics">
+        <div class="stat-card">
+          <div class="stat-label">Total Staff</div>
+          <div class="stat-value" id="totalStaff">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Weekly Hours</div>
+          <div class="stat-value" id="weeklyHours">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Coverage</div>
+          <div class="stat-value" id="coverage">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Hours/Staff</div>
+          <div class="stat-value" id="avgHours">0</div>
+        </div>
+      </div>
+
+      <div class="staff-assignments-breakdown" style="margin-top: 30px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+        <h3 style="color: #2c3e50; margin-bottom: 20px; font-size: 1.4rem; text-align: center;">📋 Staff Assignments This Week</h3>
+        <div id="staffAssignmentsList"></div>
+      </div>
+    </div>
+  </div>
+  </div> <!-- End app-container -->
+
+  <script>
+    // ===== FIREBASE AUTHENTICATION =====
+    // Fixed email for authentication - users only need to enter password
+    const AUTH_EMAIL = "admin@barscheduler.app";
+    let firebaseAuth = null;
+    let currentUser = null;
+    
+    function checkAuth() {
+      // This will be handled by Firebase onAuthStateChanged
+      showLogin();
+    }
+    
+    function showLogin() {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('appContainer').classList.add('locked');
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('loginError').classList.remove('show');
+      setTimeout(() => {
+        document.getElementById('passwordInput').focus();
+      }, 100);
+    }
+    
+    function showApp() {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('locked');
+      document.getElementById('logoutBtn').style.display = 'block';
+    }
+    
+    function login() {
+      const password = document.getElementById('passwordInput').value;
+      const errorDiv = document.getElementById('loginError');
+      const loginBtn = document.getElementById('loginBtn');
+      
+      if (!password) {
+        errorDiv.textContent = '❌ Please enter a password';
+        errorDiv.classList.add('show');
+        return;
+      }
+      
+      // Disable button during login
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Logging in...';
+      
+      if (firebaseAuth) {
+        // Use Firebase Authentication
+        firebaseAuth.signInWithEmailAndPassword(AUTH_EMAIL, password)
+          .then((userCredential) => {
+            currentUser = userCredential.user;
+            errorDiv.classList.remove('show');
+            showApp();
+            // Initialize app after successful login
+            Storage.load();
+            UI.init();
+            setTimeout(setupFirebaseDatabase, 500);
+          })
+          .catch((error) => {
+            console.error('Login error:', error);
+            if (error.code === 'auth/user-not-found') {
+              errorDiv.textContent = '❌ Account not set up yet. Contact admin.';
+            } else if (error.code === 'auth/wrong-password') {
+              errorDiv.textContent = '❌ Incorrect password';
+            } else if (error.code === 'auth/too-many-requests') {
+              errorDiv.textContent = '❌ Too many attempts. Try again later.';
+            } else {
+              errorDiv.textContent = '❌ Login failed. Try again.';
+            }
+            errorDiv.classList.add('show');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+          })
+          .finally(() => {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+          });
+      } else {
+        // Firebase not loaded yet
+        errorDiv.textContent = '❌ System loading, please wait...';
+        errorDiv.classList.add('show');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
+      }
+    }
+    
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        if (firebaseAuth) {
+          firebaseAuth.signOut().then(() => {
+            currentUser = null;
+            showLogin();
+          });
+        }
+      }
+    }
+    
+    // Event listeners for login
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        login();
+      }
+    });
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    
+    // Check auth on page load
+    checkAuth();
+    // ===== END FIREBASE AUTHENTICATION =====
+    
+    const AppState = {
+      currentWeek: new Date(),
+      scheduleData: {},
+      staffData: [],
+      staffPreferences: {},
+      eventsData: {},
+      vacationsData: [],
+      settings: {
+        dayStaffTarget: 2,
+        nightStaffTarget: 3
+      },
+      history: [],
+      historyIndex: -1,
+      maxHistorySize: 20,
+      touchMode: {
+        enabled: false,
+        selectedStaff: null
+      }
+    };
+
+    function getMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
+    }
+
+    const Utils = {
+      generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      },
+      getWeekKey() {
+        const monday = getMonday(AppState.currentWeek);
+        return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+      },
+      getDateFromDayName(dayName) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayIndex = days.indexOf(dayName);
+        const monday = getMonday(AppState.currentWeek);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + dayIndex);
+        return date;
+      },
+      formatDate(date) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      },
+      formatTimeRange(start, end) {
+        if (!start || !end) return '';
+        return `${start}-${end}`;
+      },
+      calculateHours(timeRange) {
+        if (!timeRange || !timeRange.includes('-')) return 0;
+        const [start, end] = timeRange.split('-');
+        const startHour = parseInt(start.split(':')[0]);
+        const endHour = parseInt(end.split(':')[0]);
+        return endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+      },
+      showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 6000);
+      },
+      isStaffOnVacation(staffId, date) {
+        return AppState.vacationsData.some(v => {
+          if (v.staffId !== staffId) return false;
+          const start = new Date(v.startDate);
+          const end = new Date(v.endDate);
+          return date >= start && date <= end;
+        });
+      },
+      isPreferredDayOff(staffId, dayName) {
+        const prefs = AppState.staffPreferences[staffId];
+        if (!prefs || !prefs.daysOff) return false;
+        return prefs.daysOff[dayName] === true;
+      },
+      checkForConflict(staffId, bar, day, shift) {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        for (const [key, assignments] of Object.entries(schedule)) {
+          const [keyBar, keyDay, keyShift] = key.split('-');
+          if (keyDay === day && Array.isArray(assignments)) {
+            if (assignments.some(a => a.id === staffId)) {
+              return { bar: keyBar, shift: keyShift };
+            }
+          }
+        }
+        return null;
+      },
+      
+      saveToHistory() {
+        const state = {
+          scheduleData: JSON.parse(JSON.stringify(AppState.scheduleData)),
+          staffData: JSON.parse(JSON.stringify(AppState.staffData)),
+          staffPreferences: JSON.parse(JSON.stringify(AppState.staffPreferences)),
+          eventsData: JSON.parse(JSON.stringify(AppState.eventsData)),
+          vacationsData: JSON.parse(JSON.stringify(AppState.vacationsData))
+        };
+        
+        // Remove any future states if we're not at the end
+        if (AppState.historyIndex < AppState.history.length - 1) {
+          AppState.history = AppState.history.slice(0, AppState.historyIndex + 1);
+        }
+        
+        AppState.history.push(state);
+        
+        // Keep history size limited
+        if (AppState.history.length > AppState.maxHistorySize) {
+          AppState.history.shift();
+        } else {
+          AppState.historyIndex++;
+        }
+        
+        this.updateUndoRedoButtons();
+      },
+      
+      undo() {
+        if (AppState.historyIndex > 0) {
+          AppState.historyIndex--;
+          this.restoreFromHistory();
+          Utils.showToast('Undone!');
+        }
+      },
+      
+      redo() {
+        if (AppState.historyIndex < AppState.history.length - 1) {
+          AppState.historyIndex++;
+          this.restoreFromHistory();
+          Utils.showToast('Redone!');
+        }
+      },
+      
+      restoreFromHistory() {
+        const state = AppState.history[AppState.historyIndex];
+        AppState.scheduleData = JSON.parse(JSON.stringify(state.scheduleData));
+        AppState.staffData = JSON.parse(JSON.stringify(state.staffData));
+        AppState.staffPreferences = JSON.parse(JSON.stringify(state.staffPreferences));
+        AppState.eventsData = JSON.parse(JSON.stringify(state.eventsData));
+        AppState.vacationsData = JSON.parse(JSON.stringify(state.vacationsData));
+        
+        Storage.save();
+        UI.renderSchedule();
+        UI.updateAnalytics();
+        UI.renderStaffAvailability();
+        Preferences.render();
+        Vacations.render();
+        this.updateUndoRedoButtons();
+      },
+      
+      updateUndoRedoButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        if (undoBtn) undoBtn.disabled = AppState.historyIndex <= 0;
+        if (redoBtn) redoBtn.disabled = AppState.historyIndex >= AppState.history.length - 1;
+      },
+      
+      detectAllConflicts() {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        const conflicts = [];
+        const warnings = [];
+        
+        // Check for overlapping shifts
+        const staffShifts = {};
+        
+        Object.entries(schedule).forEach(([key, assignments]) => {
+          const [bar, day, shift] = key.split('-');
+          
+          if (!Array.isArray(assignments)) return;
+          
+          assignments.forEach(assignment => {
+            if (!staffShifts[assignment.id]) {
+              staffShifts[assignment.id] = [];
+            }
+            staffShifts[assignment.id].push({ bar, day, shift, name: assignment.name });
+          });
+        });
+        
+        // Check each staff member for conflicts
+        Object.entries(staffShifts).forEach(([staffId, shifts]) => {
+          // Group by day
+          const shiftsByDay = {};
+          shifts.forEach(shift => {
+            if (!shiftsByDay[shift.day]) {
+              shiftsByDay[shift.day] = [];
+            }
+            shiftsByDay[shift.day].push(shift);
+          });
+          
+          // Check for multiple shifts on same day
+          Object.entries(shiftsByDay).forEach(([day, dayShifts]) => {
+            if (dayShifts.length > 1) {
+              const staff = AppState.staffData.find(s => s.id === staffId);
+              const shiftList = dayShifts.map(s => `${s.shift} shift at Bar ${s.bar}`).join(' and ');
+              conflicts.push({
+                type: 'overlap',
+                message: `${staff.name} is scheduled for ${shiftList} on ${day}`
+              });
+            }
+          });
+          
+          // Check if staff is on vacation
+          shifts.forEach(shift => {
+            const date = Utils.getDateFromDayName(shift.day);
+            if (Utils.isStaffOnVacation(staffId, date)) {
+              const staff = AppState.staffData.find(s => s.id === staffId);
+              warnings.push({
+                type: 'vacation',
+                message: `${staff.name} is on vacation but scheduled for ${shift.shift} shift at Bar ${shift.bar} on ${shift.day}`
+              });
+            }
+          });
+        });
+        
+        return { conflicts, warnings };
+      }
+    };
+
+    const Storage = {
+      save() {
+        const data = {
+          scheduleData: AppState.scheduleData,
+          staffData: AppState.staffData,
+          staffPreferences: AppState.staffPreferences,
+          eventsData: AppState.eventsData,
+          vacationsData: AppState.vacationsData,
+          settings: AppState.settings
+        };
+        localStorage.setItem('barSchedulerData', JSON.stringify(data));
+      },
+      load() {
+        // First check if data is embedded in the file
+        if (window.appData) {
+          try {
+            const data = window.appData;
+            AppState.scheduleData = data.scheduleData || {};
+            AppState.staffData = data.staffData || [];
+            AppState.staffPreferences = data.staffPreferences || {};
+            AppState.eventsData = data.eventsData || {};
+            AppState.vacationsData = data.vacationsData || [];
+            AppState.settings = data.settings || { dayStaffTarget: 2, nightStaffTarget: 3 };
+            // Save to localStorage for this device
+            this.save();
+            return;
+          } catch (e) {
+            console.error('Error loading embedded data:', e);
+          }
+        }
+        
+        // Fall back to localStorage
+        const saved = localStorage.getItem('barSchedulerData');
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            AppState.scheduleData = data.scheduleData || {};
+            AppState.staffData = data.staffData || [];
+            AppState.staffPreferences = data.staffPreferences || {};
+            AppState.eventsData = data.eventsData || {};
+            AppState.vacationsData = data.vacationsData || [];
+            AppState.settings = data.settings || { dayStaffTarget: 2, nightStaffTarget: 3 };
+          } catch (e) {
+            console.error('Error loading data:', e);
+            this.loadDefaults();
+          }
+        } else {
+          this.loadDefaults();
+        }
+      },
+      loadDefaults() {
+        AppState.staffData = [
+          { id: 's1', name: 'Mike Johnson', role: 'Manager', bar: 'Both' },
+          { id: 's2', name: 'Sarah Williams', role: 'Bartender', bar: '1' },
+          { id: 's3', name: 'James Brown', role: 'Bartender', bar: '2' },
+          { id: 's4', name: 'Emily Davis', role: 'Server', bar: 'Both' },
+          { id: 's5', name: 'Tom Wilson', role: 'Security', bar: 'Both' },
+          { id: 's6', name: 'Lisa Anderson', role: 'Kitchen', bar: '1' }
+        ];
+      }
+    };
+
+    const Scheduler = {
+      autoSchedule() {
+        const weekKey = Utils.getWeekKey();
+        AppState.scheduleData[weekKey] = {};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const shifts = ['Day', 'Night'];
+        const bars = ['1', '2'];
+        
+        bars.forEach(bar => {
+          days.forEach(day => {
+            const dayDate = Utils.getDateFromDayName(day);
+            shifts.forEach(shift => {
+              const key = `${bar}-${day}-${shift}`;
+              const target = shift === 'Day' ? AppState.settings.dayStaffTarget : AppState.settings.nightStaffTarget;
+              const availableStaff = AppState.staffData.filter(staff => {
+                if (staff.bar !== 'Both' && staff.bar !== bar) return false;
+                if (Utils.isStaffOnVacation(staff.id, dayDate)) return false;
+                if (Utils.isPreferredDayOff(staff.id, day)) return false;
+                const conflict = Utils.checkForConflict(staff.id, bar, day, shift);
+                if (conflict) return false;
+                const prefs = AppState.staffPreferences[staff.id];
+                if (prefs && prefs.shiftPreferences && prefs.shiftPreferences[day]) {
+                  if (prefs.shiftPreferences[day] === 'dayOnly' && shift === 'Night') return false;
+                  if (prefs.shiftPreferences[day] === 'nightOnly' && shift === 'Day') return false;
+                }
+                return true;
+              });
+              
+              const assigned = [];
+              for (let i = 0; i < Math.min(target, availableStaff.length); i++) {
+                const staff = availableStaff[i];
+                assigned.push({ ...staff, shift: shift === 'Day' ? '09:00-17:00' : '17:00-01:00' });
+              }
+              if (assigned.length > 0) {
+                AppState.scheduleData[weekKey][key] = assigned;
+              }
+            });
+          });
+        });
+        
+        Utils.saveToHistory();
+        Storage.save();
+        UI.renderSchedule();
+        UI.updateAnalytics();
+        UI.renderStaffAvailability();
+        UI.detectAndShowConflicts();
+        Utils.showToast('Auto-schedule generated!');
+      },
+      copyPreviousWeek() {
+        const currentMonday = getMonday(AppState.currentWeek);
+        const prevMonday = new Date(currentMonday);
+        prevMonday.setDate(prevMonday.getDate() - 7);
+        const prevWeekKey = `${prevMonday.getFullYear()}-${String(prevMonday.getMonth() + 1).padStart(2, '0')}-${String(prevMonday.getDate()).padStart(2, '0')}`;
+        
+        if (AppState.scheduleData[prevWeekKey]) {
+          const weekKey = Utils.getWeekKey();
+          AppState.scheduleData[weekKey] = JSON.parse(JSON.stringify(AppState.scheduleData[prevWeekKey]));
+          Utils.saveToHistory();
+          Storage.save();
+          UI.renderSchedule();
+          UI.updateAnalytics();
+          UI.renderStaffAvailability();
+          UI.detectAndShowConflicts();
+          Utils.showToast('Previous week copied!');
+        } else {
+          Utils.showToast('No schedule found for previous week', 'warning');
+        }
+      }
+    };
+
+    const Vacations = {
+      add(staffId, startDate, endDate, reason) {
+        const vacation = {
+          id: Utils.generateId(),
+          staffId,
+          startDate,
+          endDate,
+          reason: reason || 'Vacation'
+        };
+        AppState.vacationsData.push(vacation);
+        Utils.saveToHistory();
+        Storage.save();
+        this.render();
+        Calendar.render();
+        UI.renderStaffAvailability();
+        UI.detectAndShowConflicts();
+        const staff = AppState.staffData.find(s => s.id === staffId);
+        Utils.showToast(`Vacation added for ${staff.name}!`);
+      },
+      remove(vacationId) {
+        AppState.vacationsData = AppState.vacationsData.filter(v => v.id !== vacationId);
+        Utils.saveToHistory();
+        Storage.save();
+        this.render();
+        Calendar.render();
+        UI.renderStaffAvailability();
+        UI.detectAndShowConflicts();
+      },
+      render() {
+        VacationCalendar.render();
+      }
+    };
+
+    const Preferences = {
+      render() {
+        const select = document.getElementById('prefStaff');
+        select.innerHTML = '<option value="">Select Staff...</option>';
+        AppState.staffData.forEach(staff => {
+          select.innerHTML += `<option value="${staff.id}">${staff.name}</option>`;
+        });
+        this.renderAllPreferences();
+      },
+      renderAllPreferences() {
+        const container = document.getElementById('allPreferencesView');
+        
+        if (AppState.staffData.length === 0) {
+          container.innerHTML = '<div class="no-prefs">No staff members added yet</div>';
+          return;
+        }
+
+        const staffWithPrefs = AppState.staffData.filter(staff => {
+          const prefs = AppState.staffPreferences[staff.id];
+          return prefs && (Object.keys(prefs.daysOff || {}).length > 0 || Object.keys(prefs.shiftPreferences || {}).length > 0);
+        });
+
+        if (staffWithPrefs.length === 0) {
+          container.innerHTML = '<div class="no-prefs">No preferences set yet. Select a staff member above to add preferences.</div>';
+          return;
+        }
+
+        let html = '<div class="all-prefs-container">';
+        
+        staffWithPrefs.forEach(staff => {
+          const prefs = AppState.staffPreferences[staff.id];
+          html += `
+            <div class="staff-pref-card">
+              <h4>
+                <span class="role-badge role-${staff.role.toLowerCase()}">${staff.role}</span>
+                ${staff.name}
+              </h4>
+          `;
+          
+          const daysOff = [];
+          const dayShiftOnly = [];
+          const nightShiftOnly = [];
+          
+          if (prefs.daysOff) {
+            Object.entries(prefs.daysOff).forEach(([day, value]) => {
+              if (value) daysOff.push(day);
+            });
+          }
+          
+          if (prefs.shiftPreferences) {
+            Object.entries(prefs.shiftPreferences).forEach(([day, pref]) => {
+              if (pref === 'dayOnly') dayShiftOnly.push(day);
+              if (pref === 'nightOnly') nightShiftOnly.push(day);
+            });
+          }
+          
+          if (daysOff.length > 0) {
+            html += '<div class="pref-detail"><strong>Preferred Off:</strong> ';
+            daysOff.forEach(day => {
+              html += `<span class="pref-badge off">${day}</span>`;
+            });
+            html += '</div>';
+          }
+          
+          if (dayShiftOnly.length > 0) {
+            html += '<div class="pref-detail"><strong>Day Shift Only:</strong> ';
+            dayShiftOnly.forEach(day => {
+              html += `<span class="pref-badge day">${day}</span>`;
+            });
+            html += '</div>';
+          }
+          
+          if (nightShiftOnly.length > 0) {
+            html += '<div class="pref-detail"><strong>Night Shift Only:</strong> ';
+            nightShiftOnly.forEach(day => {
+              html += `<span class="pref-badge night">${day}</span>`;
+            });
+            html += '</div>';
+          }
+          
+          html += '</div>';
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+      },
+      loadPreferenceForm(staffId) {
+        const prefs = AppState.staffPreferences[staffId] || { daysOff: {}, shiftPreferences: {} };
+        document.querySelectorAll('.pref-checkbox').forEach(cb => {
+          const day = cb.dataset.day;
+          const type = cb.dataset.type;
+          if (type === 'off') {
+            cb.checked = prefs.daysOff && prefs.daysOff[day] === true;
+          } else if (type === 'dayOnly') {
+            cb.checked = prefs.shiftPreferences && prefs.shiftPreferences[day] === 'dayOnly';
+          } else if (type === 'nightOnly') {
+            cb.checked = prefs.shiftPreferences && prefs.shiftPreferences[day] === 'nightOnly';
+          }
+        });
+      },
+      save(staffId) {
+        const prefs = { daysOff: {}, shiftPreferences: {} };
+        document.querySelectorAll('.pref-checkbox[data-type="off"]').forEach(cb => {
+          if (cb.checked) prefs.daysOff[cb.dataset.day] = true;
+        });
+        document.querySelectorAll('.pref-checkbox[data-type="dayOnly"]').forEach(cb => {
+          if (cb.checked) prefs.shiftPreferences[cb.dataset.day] = 'dayOnly';
+        });
+        document.querySelectorAll('.pref-checkbox[data-type="nightOnly"]').forEach(cb => {
+          if (cb.checked) prefs.shiftPreferences[cb.dataset.day] = 'nightOnly';
+        });
+        AppState.staffPreferences[staffId] = prefs;
+        Storage.save();
+        this.renderAllPreferences();
+      },
+      deletePreferences(staffId) {
+        delete AppState.staffPreferences[staffId];
+        Storage.save();
+        this.loadPreferenceForm(staffId);
+        this.renderAllPreferences();
+        Utils.showToast('Preferences cleared!');
+      }
+    };
+
+    const Calendar = {
+      currentMonth: new Date(),
+      render() {
+        const year = this.currentMonth.getFullYear();
+        const month = this.currentMonth.getMonth();
+        
+        document.getElementById('currentMonth').textContent = 
+          this.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDay = firstDay.getDay();
+        const daysInMonth = lastDay.getDate();
+        
+        let html = '';
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayNames.forEach(day => {
+          html += `<div class="cal-day-name">${day}</div>`;
+        });
+        
+        let currentDate = 1;
+        for (let i = 0; i < 6; i++) {
+          for (let j = 0; j < 7; j++) {
+            if (i === 0 && j < startDay) {
+              html += '<div class="cal-day"></div>';
+            } else if (currentDate > daysInMonth) {
+              html += '<div class="cal-day"></div>';
+            } else {
+              const date = new Date(year, month, currentDate);
+              const dayEvents = this.getEventsForDate(date);
+              const isToday = this.isToday(date);
+              
+              html += `<div class="cal-day ${isToday ? 'today' : ''}" data-date="${date.toISOString()}">`;
+              html += `<div class="cal-day-num">${currentDate}</div>`;
+              
+              dayEvents.forEach(event => {
+                html += `<div class="cal-event ${event.bar}" draggable="true" data-event-id="${event.id}" data-date="${date.toISOString()}">
+                  <span>${event.title}</span>
+                  <button class="cal-event-delete" onclick="Calendar.deleteEvent('${event.id}', '${date.toISOString()}')">×</button>
+                </div>`;
+              });
+              
+              html += '</div>';
+              currentDate++;
+            }
+          }
+          if (currentDate > daysInMonth) break;
+        }
+        
+        document.getElementById('eventCalendar').innerHTML = html;
+        this.attachDragListeners();
+      },
+      isToday(date) {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+               date.getMonth() === today.getMonth() &&
+               date.getFullYear() === today.getFullYear();
+      },
+      getEventsForDate(date) {
+        const events = [];
+        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+        const monday = getMonday(date);
+        const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+        
+        ['1', '2'].forEach(bar => {
+          const eventKey = `${bar}-${dayName}-Events`;
+          const weekEvents = AppState.eventsData[weekKey];
+          if (weekEvents && weekEvents[eventKey]) {
+            weekEvents[eventKey].forEach(e => {
+              events.push({ ...e, bar: `bar${bar}` });
+            });
+          }
+        });
+        
+        return events;
+      },
+      deleteEvent(eventId, dateStr) {
+        const date = new Date(dateStr);
+        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+        const monday = getMonday(date);
+        const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+        
+        ['1', '2'].forEach(bar => {
+          const eventKey = `${bar}-${dayName}-Events`;
+          if (AppState.eventsData[weekKey] && AppState.eventsData[weekKey][eventKey]) {
+            AppState.eventsData[weekKey][eventKey] = AppState.eventsData[weekKey][eventKey].filter(e => e.id !== eventId);
+          }
+        });
+        
+        Storage.save();
+        this.render();
+        UI.renderSchedule();
+        Utils.showToast('Event deleted!');
+      },
+      prevMonth() {
+        this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
+        this.render();
+      },
+      nextMonth() {
+        this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
+        this.render();
+      },
+      attachDragListeners() {
+        document.querySelectorAll('.cal-event').forEach(event => {
+          event.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('eventId', event.dataset.eventId);
+            e.dataTransfer.setData('fromDate', event.dataset.date);
+            event.classList.add('dragging');
+          });
+          event.addEventListener('dragend', (e) => {
+            event.classList.remove('dragging');
+          });
+        });
+        
+        document.querySelectorAll('.cal-day').forEach(day => {
+          day.addEventListener('dragover', (e) => {
+            e.preventDefault();
+          });
+          day.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const eventId = e.dataTransfer.getData('eventId');
+            const fromDateStr = e.dataTransfer.getData('fromDate');
+            const toDate = day.dataset.date;
+            
+            if (toDate && eventId) {
+              this.moveEvent(eventId, new Date(fromDateStr), new Date(toDate));
+            }
+          });
+        });
+      },
+      moveEvent(eventId, fromDate, toDate) {
+        const fromDayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][fromDate.getDay()];
+        const toDayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][toDate.getDay()];
+        
+        const fromMonday = getMonday(fromDate);
+        const toMonday = getMonday(toDate);
+        
+        const fromWeekKey = `${fromMonday.getFullYear()}-${String(fromMonday.getMonth() + 1).padStart(2, '0')}-${String(fromMonday.getDate()).padStart(2, '0')}`;
+        const toWeekKey = `${toMonday.getFullYear()}-${String(toMonday.getMonth() + 1).padStart(2, '0')}-${String(toMonday.getDate()).padStart(2, '0')}`;
+        
+        let event = null;
+        let fromBar = null;
+        
+        ['1', '2'].forEach(bar => {
+          const fromKey = `${bar}-${fromDayName}-Events`;
+          if (AppState.eventsData[fromWeekKey] && AppState.eventsData[fromWeekKey][fromKey]) {
+            const found = AppState.eventsData[fromWeekKey][fromKey].find(e => e.id === eventId);
+            if (found) {
+              event = found;
+              fromBar = bar;
+              AppState.eventsData[fromWeekKey][fromKey] = AppState.eventsData[fromWeekKey][fromKey].filter(e => e.id !== eventId);
+            }
+          }
+        });
+        
+        if (event && fromBar) {
+          if (!AppState.eventsData[toWeekKey]) {
+            AppState.eventsData[toWeekKey] = {};
+          }
+          const toKey = `${fromBar}-${toDayName}-Events`;
+          if (!AppState.eventsData[toWeekKey][toKey]) {
+            AppState.eventsData[toWeekKey][toKey] = [];
+          }
+          AppState.eventsData[toWeekKey][toKey].push(event);
+          Storage.save();
+          this.render();
+          UI.renderSchedule();
+          Utils.showToast('Event moved!');
+        }
+      }
+    };
+
+    const VacationCalendar = {
+      currentMonth: new Date(),
+      render() {
+        const year = this.currentMonth.getFullYear();
+        const month = this.currentMonth.getMonth();
+        
+        document.getElementById('vacCurrentMonth').textContent = 
+          this.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startDay = firstDay.getDay();
+        const daysInMonth = lastDay.getDate();
+        
+        let html = '';
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayNames.forEach(day => {
+          html += `<div class="cal-day-name">${day}</div>`;
+        });
+        
+        let currentDate = 1;
+        for (let i = 0; i < 6; i++) {
+          for (let j = 0; j < 7; j++) {
+            if (i === 0 && j < startDay) {
+              html += '<div class="cal-day"></div>';
+            } else if (currentDate > daysInMonth) {
+              html += '<div class="cal-day"></div>';
+            } else {
+              const date = new Date(year, month, currentDate);
+              const dayVacations = this.getVacationsForDate(date);
+              const isToday = this.isToday(date);
+              const hasVacation = dayVacations.length > 0;
+              
+              html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasVacation ? 'has-vacation' : ''}">`;
+              html += `<div class="cal-day-num">${currentDate}</div>`;
+              
+              dayVacations.forEach(vac => {
+                const staff = AppState.staffData.find(s => s.id === vac.staffId);
+                html += `<div class="cal-event vacation">
+                  <span>${staff ? staff.name : 'Unknown'}</span>
+                  <button class="cal-event-delete" onclick="VacationCalendar.deleteVacation('${vac.id}')">×</button>
+                </div>`;
+              });
+              
+              html += '</div>';
+              currentDate++;
+            }
+          }
+          if (currentDate > daysInMonth) break;
+        }
+        
+        document.getElementById('vacationCalendar').innerHTML = html;
+      },
+      isToday(date) {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+               date.getMonth() === today.getMonth() &&
+               date.getFullYear() === today.getFullYear();
+      },
+      getVacationsForDate(date) {
+        return AppState.vacationsData.filter(v => {
+          const start = new Date(v.startDate);
+          const end = new Date(v.endDate);
+          return date >= start && date <= end;
+        });
+      },
+      deleteVacation(vacationId) {
+        Vacations.remove(vacationId);
+        Utils.showToast('Vacation deleted!');
+      },
+      prevMonth() {
+        this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
+        this.render();
+      },
+      nextMonth() {
+        this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
+        this.render();
+      }
+    };
+
+    const UI = {
+      listenersAttached: false,
+      init() {
+        this.renderWeek();
+        this.renderSchedule();
+        this.renderStaffList();
+        this.populateSelects();
+        this.updateAnalytics();
+        this.renderStaffAvailability();
+        this.detectAndShowConflicts();
+        if (!this.listenersAttached) {
+          this.attachEventListeners();
+          this.listenersAttached = true;
+        }
+        Calendar.render();
+        Vacations.render();
+        Preferences.render();
+        Utils.saveToHistory(); // Save initial state
+        Utils.updateUndoRedoButtons();
+      },
+      renderWeek() {
+        const monday = getMonday(AppState.currentWeek);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        document.getElementById('currentWeek').textContent = 
+          `Week of ${Utils.formatDate(monday)} - ${Utils.formatDate(sunday)}`;
+      },
+      renderSchedule() {
+        this.renderBarSchedule('1', 'bar1Schedule');
+        this.renderBarSchedule('2', 'bar2Schedule');
+        this.renderPrintLayout();
+      },
+      renderBarSchedule(bar, elementId) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const shifts = ['Events', 'Day', 'Night', 'Custom'];
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        const events = AppState.eventsData[weekKey] || {};
+        const monday = getMonday(AppState.currentWeek);
+        
+        let html = '<div class="day-header"></div>';
+        days.forEach((day, i) => {
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + i);
+          html += `<div class="day-header">${day}<br><small style="opacity:0.8">${Utils.formatDate(date)}</small></div>`;
+        });
+        
+        shifts.forEach(shift => {
+          html += `<div class="shift-label row-${shift.toLowerCase()}">${shift === 'Events' ? '🎉 Events' : shift + ' Shift'}</div>`;
+          days.forEach(day => {
+            const key = `${bar}-${day}-${shift}`;
+            html += `<div class="shift-cell row-${shift.toLowerCase()}" data-bar="${bar}" data-day="${day}" data-shift="${shift}">`;
+            
+            if (shift === 'Events') {
+              const eventsList = events[key] || [];
+              eventsList.forEach(e => {
+                html += `<div class="staff-assignment" style="background: linear-gradient(135deg, var(--events), #d68910);">
+                  <span>${e.title}${e.time ? ' • ' + e.time : ''}</span>
+                  <button class="remove-btn event-actions" onclick="UI.removeEvent('${key}', '${e.id}')">×</button>
+                </div>`;
+              });
+            } else {
+              const assignments = schedule[key] || [];
+              assignments.forEach(staff => {
+                html += `<div class="staff-assignment role-${staff.role.toLowerCase()}" draggable="true" data-staff-id="${staff.id}">
+                  <span>${staff.name}${staff.shift ? ' • ' + staff.shift : ''}</span>
+                  <button class="remove-btn staff-actions" onclick="UI.removeStaff('${key}', '${staff.id}')">×</button>
+                </div>`;
+              });
+            }
+            
+            html += '</div>';
+          });
+        });
+        
+        document.getElementById(elementId).innerHTML = html;
+        this.attachDragDropListeners();
+      },
+      attachDragDropListeners() {
+        document.querySelectorAll('.staff-card, .staff-assignment').forEach(card => {
+          // Drag and drop for desktop
+          card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('staffId', card.dataset.staffId);
+            e.dataTransfer.setData('fromCell', card.parentElement.dataset ? 
+              `${card.parentElement.dataset.bar}-${card.parentElement.dataset.day}-${card.parentElement.dataset.shift}` : '');
+            card.classList.add('dragging');
+          });
+          card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+          });
+          
+          // Touch mode for mobile - tap to select staff
+          card.addEventListener('click', (e) => {
+            // Only activate touch mode if clicking staff card (not already assigned staff)
+            if (!card.classList.contains('staff-assignment')) {
+              this.activateTouchMode(card.dataset.staffId);
+            }
+          });
+        });
+        
+        document.querySelectorAll('.shift-cell').forEach(cell => {
+          cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            cell.classList.add('drag-over');
+          });
+          cell.addEventListener('dragleave', () => {
+            cell.classList.remove('drag-over');
+          });
+          cell.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cell.classList.remove('drag-over');
+            const staffId = e.dataTransfer.getData('staffId');
+            const fromCell = e.dataTransfer.getData('fromCell');
+            const toCell = `${cell.dataset.bar}-${cell.dataset.day}-${cell.dataset.shift}`;
+            
+            if (cell.dataset.shift === 'Events') {
+              Utils.showToast('Cannot assign staff to Events row', 'error');
+              return;
+            }
+            
+            const staff = AppState.staffData.find(s => s.id === staffId);
+            if (!staff) return;
+            
+            const dayDate = Utils.getDateFromDayName(cell.dataset.day);
+            if (Utils.isStaffOnVacation(staffId, dayDate)) {
+              Utils.showToast(`⚠️ ${staff.name} is on vacation on ${cell.dataset.day}!`, 'error');
+              return;
+            }
+            
+            const existingShift = Utils.checkForConflict(staffId, cell.dataset.bar, cell.dataset.day, cell.dataset.shift);
+            if (existingShift) {
+              Utils.showToast(`⚠️ ${staff.name} already has a ${existingShift.shift} shift at Bar ${existingShift.bar} on ${cell.dataset.day}!`, 'warning');
+              return;
+            }
+            
+            if (Utils.isPreferredDayOff(staffId, cell.dataset.day)) {
+              Utils.showToast(`⚠️ ${staff.name} has ${cell.dataset.day} marked as a preferred day off!`, 'warning');
+            }
+            
+            const weekKey = Utils.getWeekKey();
+            if (!AppState.scheduleData[weekKey]) {
+              AppState.scheduleData[weekKey] = {};
+            }
+            
+            if (fromCell && fromCell !== toCell) {
+              if (AppState.scheduleData[weekKey][fromCell]) {
+                AppState.scheduleData[weekKey][fromCell] = 
+                  AppState.scheduleData[weekKey][fromCell].filter(s => s.id !== staffId);
+              }
+            }
+            
+            if (!AppState.scheduleData[weekKey][toCell]) {
+              AppState.scheduleData[weekKey][toCell] = [];
+            }
+            
+            const shift = cell.dataset.shift;
+            const defaultTime = shift === 'Day' ? '09:00-17:00' : shift === 'Night' ? '17:00-01:00' : '12:00-20:00';
+            AppState.scheduleData[weekKey][toCell].push({ ...staff, shift: defaultTime });
+            
+            Utils.saveToHistory();
+            Storage.save();
+            this.renderSchedule();
+            this.updateAnalytics();
+            this.renderStaffAvailability();
+            this.detectAndShowConflicts();
+            Utils.showToast('Staff assigned!');
+          });
+          
+          // Touch mode - tap shift cell to assign selected staff
+          cell.addEventListener('click', (e) => {
+            if (AppState.touchMode.enabled && AppState.touchMode.selectedStaff) {
+              this.assignStaffToCell(AppState.touchMode.selectedStaff, cell);
+            }
+          });
+        });
+      },
+      activateTouchMode(staffId) {
+        const staff = AppState.staffData.find(s => s.id === staffId);
+        if (!staff) return;
+        
+        AppState.touchMode.enabled = true;
+        AppState.touchMode.selectedStaff = staffId;
+        
+        // Update UI
+        document.querySelectorAll('.staff-card').forEach(card => {
+          card.classList.remove('touch-selected');
+          if (card.dataset.staffId === staffId) {
+            card.classList.add('touch-selected');
+          }
+        });
+        
+        document.querySelectorAll('.shift-cell').forEach(cell => {
+          if (cell.dataset.shift !== 'Events') {
+            cell.classList.add('touch-assignable');
+          }
+        });
+        
+        const banner = document.getElementById('touchModeBanner');
+        const text = document.getElementById('touchModeText');
+        text.textContent = `👆 Tap a shift to assign ${staff.name}`;
+        banner.classList.add('active');
+      },
+      deactivateTouchMode() {
+        AppState.touchMode.enabled = false;
+        AppState.touchMode.selectedStaff = null;
+        
+        document.querySelectorAll('.staff-card').forEach(card => {
+          card.classList.remove('touch-selected');
+        });
+        
+        document.querySelectorAll('.shift-cell').forEach(cell => {
+          cell.classList.remove('touch-assignable');
+        });
+        
+        const banner = document.getElementById('touchModeBanner');
+        banner.classList.remove('active');
+      },
+      assignStaffToCell(staffId, cell) {
+        if (cell.dataset.shift === 'Events') {
+          Utils.showToast('Cannot assign staff to Events row', 'error');
+          this.deactivateTouchMode();
+          return;
+        }
+        
+        const staff = AppState.staffData.find(s => s.id === staffId);
+        if (!staff) {
+          this.deactivateTouchMode();
+          return;
+        }
+        
+        const dayDate = Utils.getDateFromDayName(cell.dataset.day);
+        if (Utils.isStaffOnVacation(staffId, dayDate)) {
+          Utils.showToast(`⚠️ ${staff.name} is on vacation on ${cell.dataset.day}!`, 'error');
+          this.deactivateTouchMode();
+          return;
+        }
+        
+        const existingShift = Utils.checkForConflict(staffId, cell.dataset.bar, cell.dataset.day, cell.dataset.shift);
+        if (existingShift) {
+          Utils.showToast(`⚠️ ${staff.name} already has a ${existingShift.shift} shift at Bar ${existingShift.bar} on ${cell.dataset.day}!`, 'warning');
+          this.deactivateTouchMode();
+          return;
+        }
+        
+        if (Utils.isPreferredDayOff(staffId, cell.dataset.day)) {
+          Utils.showToast(`⚠️ ${staff.name} has ${cell.dataset.day} marked as a preferred day off!`, 'warning');
+        }
+        
+        const weekKey = Utils.getWeekKey();
+        const toCell = `${cell.dataset.bar}-${cell.dataset.day}-${cell.dataset.shift}`;
+        
+        if (!AppState.scheduleData[weekKey]) {
+          AppState.scheduleData[weekKey] = {};
+        }
+        
+        if (!AppState.scheduleData[weekKey][toCell]) {
+          AppState.scheduleData[weekKey][toCell] = [];
+        }
+        
+        const shift = cell.dataset.shift;
+        const defaultTime = shift === 'Day' ? '09:00-17:00' : shift === 'Night' ? '17:00-01:00' : '12:00-20:00';
+        AppState.scheduleData[weekKey][toCell].push({ ...staff, shift: defaultTime });
+        
+        Utils.saveToHistory();
+        Storage.save();
+        this.renderSchedule();
+        this.updateAnalytics();
+        this.renderStaffAvailability();
+        this.detectAndShowConflicts();
+        Utils.showToast(`${staff.name} assigned to ${cell.dataset.shift} shift!`);
+        
+        this.deactivateTouchMode();
+      },
+      removeStaff(key, staffId) {
+        Utils.saveToHistory();
+        const weekKey = Utils.getWeekKey();
+        if (AppState.scheduleData[weekKey] && AppState.scheduleData[weekKey][key]) {
+          AppState.scheduleData[weekKey][key] = 
+            AppState.scheduleData[weekKey][key].filter(s => s.id !== staffId);
+          Storage.save();
+          this.renderSchedule();
+          this.updateAnalytics();
+          this.renderStaffAvailability();
+          this.detectAndShowConflicts();
+        }
+      },
+      removeEvent(key, eventId) {
+        Utils.saveToHistory();
+        const weekKey = Utils.getWeekKey();
+        if (AppState.eventsData[weekKey] && AppState.eventsData[weekKey][key]) {
+          AppState.eventsData[weekKey][key] = 
+            AppState.eventsData[weekKey][key].filter(e => e.id !== eventId);
+          Storage.save();
+          this.renderSchedule();
+          Calendar.render();
+        }
+      },
+      renderStaffAvailability() {
+        const grid = document.getElementById('availabilityGrid');
+        const monday = getMonday(AppState.currentWeek);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        
+        let html = '';
+        AppState.staffData.forEach(staff => {
+          // Check if staff is on vacation this week
+          let isOnVacation = false;
+          for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            if (Utils.isStaffOnVacation(staff.id, date)) {
+              isOnVacation = true;
+              break;
+            }
+          }
+          
+          const statusClass = isOnVacation ? 'on-vacation' : 'available';
+          html += `
+            <div class="availability-item ${statusClass}">
+              <span class="name">${staff.name}</span>
+              <span class="status ${isOnVacation ? 'vacation' : 'available'}">
+                ${isOnVacation ? '🏖️ Vacation' : '✓ Available'}
+              </span>
+            </div>
+          `;
+        });
+        
+        grid.innerHTML = html || '<p style="color:#95a5a6;text-align:center;">No staff members</p>';
+      },
+      detectAndShowConflicts() {
+        const { conflicts, warnings } = Utils.detectAllConflicts();
+        const container = document.getElementById('conflictWarnings');
+        
+        let html = '';
+        
+        conflicts.forEach(conflict => {
+          html += `
+            <div class="conflict-error">
+              <span class="icon">⚠️</span>
+              <span class="message">${conflict.message}</span>
+            </div>
+          `;
+        });
+        
+        warnings.forEach(warning => {
+          html += `
+            <div class="conflict-warning">
+              <span class="icon">⚠️</span>
+              <span class="message">${warning.message}</span>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+      },
+      renderStaffList() {
+        const renderList = (containerId) => {
+          let html = '';
+          AppState.staffData.forEach(staff => {
+            html += `
+              <div class="staff-card" draggable="true" data-staff-id="${staff.id}">
+                <div class="staff-info">
+                  <span class="staff-name">${staff.name}</span>
+                  <div class="staff-details">
+                    <span class="role-badge role-${staff.role.toLowerCase()}">${staff.role}</span>
+                    <span style="margin-left:8px;color:#95a5a6;">Bar ${staff.bar}</span>
+                  </div>
+                </div>
+                ${containerId === 'currentStaffList' ? `
+                  <div class="staff-actions">
+                    <button class="staff-action-btn" onclick="UI.deleteStaff('${staff.id}')">×</button>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          });
+          document.getElementById(containerId).innerHTML = html || '<p style="color:#95a5a6;text-align:center;">No staff members</p>';
+        };
+        
+        renderList('currentStaffList');
+        this.attachDragDropListeners();
+      },
+      deleteStaff(staffId) {
+        if (confirm('Remove this staff member? This will also remove them from all schedules.')) {
+          AppState.staffData = AppState.staffData.filter(s => s.id !== staffId);
+          Object.keys(AppState.scheduleData).forEach(weekKey => {
+            Object.keys(AppState.scheduleData[weekKey]).forEach(key => {
+              AppState.scheduleData[weekKey][key] = 
+                AppState.scheduleData[weekKey][key].filter(s => s.id !== staffId);
+            });
+          });
+          delete AppState.staffPreferences[staffId];
+          AppState.vacationsData = AppState.vacationsData.filter(v => v.staffId !== staffId);
+          Storage.save();
+          this.renderStaffList();
+          this.renderSchedule();
+          this.populateSelects();
+          this.updateAnalytics();
+          Preferences.render();
+          Utils.showToast('Staff member removed!');
+        }
+      },
+      populateSelects() {
+        const selects = ['quickStaff', 'prefStaff', 'vacStaff'];
+        selects.forEach(id => {
+          const select = document.getElementById(id);
+          const currentValue = select.value;
+          select.innerHTML = '<option value="">Select Staff...</option>';
+          AppState.staffData.forEach(staff => {
+            select.innerHTML += `<option value="${staff.id}">${staff.name}</option>`;
+          });
+          if (currentValue) select.value = currentValue;
+        });
+      },
+      updateAnalytics() {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        let totalHours = 0;
+        let totalAssignments = 0;
+        Object.values(schedule).forEach(shifts => {
+          if (Array.isArray(shifts)) {
+            shifts.forEach(assignment => {
+              totalAssignments++;
+              totalHours += Utils.calculateHours(assignment.shift);
+            });
+          }
+        });
+        const totalSlots = 7 * 2 * 2;
+        const coverage = totalSlots > 0 ? Math.round((totalAssignments / totalSlots) * 100) : 0;
+        const avgHours = AppState.staffData.length > 0 ? Math.round(totalHours / AppState.staffData.length) : 0;
+        document.getElementById('totalStaff').textContent = AppState.staffData.length;
+        document.getElementById('weeklyHours').textContent = Math.round(totalHours);
+        document.getElementById('coverage').textContent = coverage + '%';
+        document.getElementById('avgHours').textContent = avgHours;
+        
+        // Render staff assignments breakdown
+        this.renderStaffAssignments();
+      },
+      renderStaffAssignments() {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        
+        // Count assignments per staff member
+        const assignmentCounts = {};
+        
+        AppState.staffData.forEach(staff => {
+          assignmentCounts[staff.id] = {
+            staff: staff,
+            count: 0
+          };
+        });
+        
+        Object.values(schedule).forEach(shifts => {
+          if (Array.isArray(shifts)) {
+            shifts.forEach(assignment => {
+              if (assignmentCounts[assignment.id]) {
+                assignmentCounts[assignment.id].count++;
+              }
+            });
+          }
+        });
+        
+        // Convert to array and sort by count (descending)
+        const sortedAssignments = Object.values(assignmentCounts)
+          .sort((a, b) => b.count - a.count);
+        
+        const assignmentsList = document.getElementById('staffAssignmentsList');
+        
+        if (sortedAssignments.length === 0) {
+          assignmentsList.innerHTML = '<div class="no-assignments">No staff members found</div>';
+          return;
+        }
+        
+        assignmentsList.innerHTML = sortedAssignments.map(item => {
+          const staff = item.staff;
+          const barClass = staff.bar === '1' ? 'bar1' : staff.bar === '2' ? 'bar2' : 'both';
+          const barLabel = staff.bar === '1' ? 'Bar 1' : staff.bar === '2' ? 'Bar 2' : 'Both';
+          return `
+            <div class="staff-assignment-item">
+              <div class="staff-info">
+                <div class="staff-name">${staff.name}</div>
+                <span class="staff-role-badge ${staff.role.toLowerCase()}">${staff.role}</span>
+                <span class="staff-bar-badge ${barClass}">${barLabel}</span>
+              </div>
+              <div class="assignment-count">
+                <span class="count-label">shifts</span>
+                <span class="count-badge">${item.count}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+      renderPrintLayout() {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        const events = AppState.eventsData[weekKey] || {};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        const monday = getMonday(AppState.currentWeek);
+        
+        let html = '<div class="print-bars-container">';
+        
+        ['1', '2'].forEach(bar => {
+          html += `
+            <div class="print-bar-section">
+              <div class="print-bar-title ${bar === '2' ? 'bar2' : ''}">Bar ${bar}</div>
+              <table class="print-schedule-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Events</th>
+                    <th>Day</th>
+                    <th>Night</th>
+                    <th>Custom</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          days.forEach((day, i) => {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            
+            html += `
+              <tr>
+                <td class="print-day-cell">${day}<br><small style="color: #7f8c8d;">${Utils.formatDate(date)}</small></td>
+            `;
+            
+            const eventKey = `${bar}-${day}-Events`;
+            const eventsList = events[eventKey] || [];
+            html += `<td>`;
+            if (eventsList.length > 0) {
+              eventsList.forEach(e => {
+                html += `<span class="print-event-badge">${e.title}${e.time ? ' • ' + e.time : ''}</span>`;
+              });
+            } else {
+              html += `<span class="print-no-staff">-</span>`;
+            }
+            html += `</td>`;
+            
+            ['Day', 'Night', 'Custom'].forEach(shift => {
+              const key = `${bar}-${day}-${shift}`;
+              const assignments = schedule[key] || [];
+              html += `<td>`;
+              if (assignments.length > 0) {
+                assignments.forEach(a => {
+                  html += `<div class="print-staff-item">${a.name}<span class="print-role-badge role-${a.role.toLowerCase()}">${a.role}</span>${a.shift ? `<span class="print-time-info">${a.shift}</span>` : ''}</div>`;
+                });
+              } else {
+                html += `<span class="print-no-staff">-</span>`;
+              }
+              html += `</td>`;
+            });
+            
+            html += `</tr>`;
+          });
+          
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+        
+        document.getElementById('printLayout').innerHTML = html;
+      },
+      printSchedule() {
+        this.renderPrintLayout();
+        window.print();
+      },
+      sendSchedule() {
+        const weekKey = Utils.getWeekKey();
+        const schedule = AppState.scheduleData[weekKey] || {};
+        const events = AppState.eventsData[weekKey] || {};
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        const monday = getMonday(AppState.currentWeek);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        
+        let htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    padding: 10px;
+    margin: 0;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #667eea;
+  }
+  .header h1 {
+    color: #2c3e50;
+    margin: 0 0 5px 0;
+    font-size: 1.2rem;
+  }
+  .week-info {
+    color: #7f8c8d;
+    font-size: 12px;
+  }
+  .bars-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  .bar-section {
+    page-break-inside: avoid;
+  }
+  .bar-title {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  .bar-title.bar2 {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+  }
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 10px;
+  }
+  .schedule-table th {
+    background: #34495e;
+    color: white;
+    padding: 5px 4px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9px;
+  }
+  .schedule-table td {
+    padding: 5px 4px;
+    border-bottom: 1px solid #ecf0f1;
+    vertical-align: top;
+  }
+  .schedule-table tr:last-child td {
+    border-bottom: none;
+  }
+  .schedule-table tr:hover {
+    background: #f8f9fa;
+  }
+  .day-cell {
+    font-weight: bold;
+    color: #2c3e50;
+    min-width: 50px;
+    font-size: 9px;
+  }
+  .shift-label {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 8px;
+    font-weight: 600;
+    color: white;
+    margin-right: 4px;
+  }
+  .shift-day {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+  }
+  .shift-night {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  }
+  .shift-custom {
+    background: linear-gradient(135deg, #16a085, #138d75);
+  }
+  .event-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 8px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #e67e22, #d68910);
+    color: white;
+    margin: 1px 2px 1px 0;
+  }
+  .staff-item {
+    padding: 2px 0;
+    color: #2c3e50;
+    font-size: 9px;
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 1px 4px;
+    border-radius: 6px;
+    font-size: 7px;
+    font-weight: 600;
+    color: white;
+    margin-left: 4px;
+  }
+  .role-manager { background: #2c3e50; }
+  .role-bartender { background: #27ae60; }
+  .role-server { background: #3498db; }
+  .role-security { background: #34495e; }
+  .role-kitchen { background: #e67e22; }
+  .time-info {
+    color: #7f8c8d;
+    font-size: 8px;
+    margin-left: 4px;
+  }
+  .no-staff {
+    color: #95a5a6;
+    font-style: italic;
+    font-size: 8px;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px solid #ecf0f1;
+    color: #7f8c8d;
+    font-size: 10px;
+  }
+  @media print {
+    body { background: white; padding: 0; }
+    .container { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🍺 Bar Staff Schedule</h1>
+    <div class="week-info">Week of ${Utils.formatDate(monday)} - ${Utils.formatDate(sunday)}</div>
+  </div>
+  <div class="bars-container">
+`;
+        
+        ['1', '2'].forEach(bar => {
+          htmlBody += `
+    <div class="bar-section">
+      <div class="bar-title ${bar === '2' ? 'bar2' : ''}">Bar ${bar}</div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Events</th>
+            <th>Day Shift</th>
+            <th>Night Shift</th>
+            <th>Custom</th>
+          </tr>
+        </thead>
+        <tbody>
+`;
+          
+          days.forEach((day, i) => {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            
+            htmlBody += `
+          <tr>
+            <td class="day-cell">${day}<br><small style="color: #7f8c8d;">${Utils.formatDate(date)}</small></td>
+`;
+            
+            const eventKey = `${bar}-${day}-Events`;
+            const eventsList = events[eventKey] || [];
+            htmlBody += `<td>`;
+            if (eventsList.length > 0) {
+              eventsList.forEach(e => {
+                htmlBody += `<span class="event-badge">${e.title}${e.time ? ' • ' + e.time : ''}</span>`;
+              });
+            } else {
+              htmlBody += `<span class="no-staff">-</span>`;
+            }
+            htmlBody += `</td>`;
+            
+            ['Day', 'Night', 'Custom'].forEach(shift => {
+              const key = `${bar}-${day}-${shift}`;
+              const assignments = schedule[key] || [];
+              htmlBody += `<td>`;
+              if (assignments.length > 0) {
+                assignments.forEach(a => {
+                  htmlBody += `<div class="staff-item">${a.name}<span class="role-badge role-${a.role.toLowerCase()}">${a.role}</span>${a.shift ? `<span class="time-info">${a.shift}</span>` : ''}</div>`;
+                });
+              } else {
+                htmlBody += `<span class="no-staff">-</span>`;
+              }
+              htmlBody += `</td>`;
+            });
+            
+            htmlBody += `</tr>`;
+          });
+          
+          htmlBody += `
+        </tbody>
+      </table>
+    </div>
+`;
+        });
+        
+        htmlBody += `
+  </div>
+  <div class="footer">
+    Generated by Bar Staff Scheduler Pro
+  </div>
+</div>
+</body>
+</html>
+`;
+        
+        const subject = `Bar Staff Schedule - Week of ${Utils.formatDate(monday)}`;
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent('Please see attached schedule')}`;
+        
+        const blob = new Blob([htmlBody], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `schedule-${weekKey}.html`;
+        a.click();
+        
+        Utils.showToast('Schedule downloaded! You can now email it.', 'success');
+      },
+      attachEventListeners() {
+        // Touch mode cancel button
+        document.getElementById('cancelTouchMode').addEventListener('click', () => {
+          this.deactivateTouchMode();
+        });
+        
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.schedule-section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+          });
+        });
+        
+        document.getElementById('undoBtn').addEventListener('click', () => {
+          Utils.undo();
+        });
+        
+        document.getElementById('redoBtn').addEventListener('click', () => {
+          Utils.redo();
+        });
+        
+        document.getElementById('prevWeekBtn').addEventListener('click', () => {
+          AppState.currentWeek.setDate(AppState.currentWeek.getDate() - 7);
+          this.renderWeek();
+          this.renderSchedule();
+          this.updateAnalytics();
+          this.renderStaffAvailability();
+          this.detectAndShowConflicts();
+        });
+        document.getElementById('nextWeekBtn').addEventListener('click', () => {
+          AppState.currentWeek.setDate(AppState.currentWeek.getDate() + 7);
+          this.renderWeek();
+          this.renderSchedule();
+          this.updateAnalytics();
+          this.renderStaffAvailability();
+          this.detectAndShowConflicts();
+        });
+        
+        document.getElementById('quickAssignBtn').addEventListener('click', () => {
+          const staffId = document.getElementById('quickStaff').value;
+          const bar = document.getElementById('quickBar').value;
+          const day = document.getElementById('quickDay').value;
+          const shift = document.getElementById('quickShift').value;
+          const startTime = document.getElementById('quickTimeStart').value;
+          const endTime = document.getElementById('quickTimeEnd').value;
+          
+          if (!staffId) {
+            Utils.showToast('Please select a staff member', 'error');
+            return;
+          }
+          
+          const staff = AppState.staffData.find(s => s.id === staffId);
+          const dayDate = Utils.getDateFromDayName(day);
+          
+          if (Utils.isStaffOnVacation(staffId, dayDate)) {
+            Utils.showToast(`⚠️ ${staff.name} is on vacation on ${day}!`, 'error');
+            return;
+          }
+          
+          const existingShift = Utils.checkForConflict(staffId, bar, day, shift);
+          if (existingShift) {
+            Utils.showToast(`⚠️ ${staff.name} already has a ${existingShift.shift} shift at Bar ${existingShift.bar} on ${day}!`, 'warning');
+            return;
+          }
+          
+          if (Utils.isPreferredDayOff(staffId, day)) {
+            Utils.showToast(`⚠️ ${staff.name} has ${day} marked as a preferred day off!`, 'warning');
+          }
+          
+          const weekKey = Utils.getWeekKey();
+          if (!AppState.scheduleData[weekKey]) {
+            AppState.scheduleData[weekKey] = {};
+          }
+          const key = `${bar}-${day}-${shift}`;
+          if (!AppState.scheduleData[weekKey][key]) {
+            AppState.scheduleData[weekKey][key] = [];
+          }
+          
+          const timeRange = Utils.formatTimeRange(startTime, endTime);
+          AppState.scheduleData[weekKey][key].push({ ...staff, shift: timeRange });
+          Utils.saveToHistory();
+          Storage.save();
+          this.renderSchedule();
+          this.updateAnalytics();
+          this.renderStaffAvailability();
+          this.detectAndShowConflicts();
+          // Show success after delay to not override warning
+          setTimeout(() => Utils.showToast("Staff assigned!"), 6500);
+        });
+        
+                // Recurring toggle
+        document.getElementById('recurringCheckbox').addEventListener('change', (e) => {
+          document.getElementById('recurringDetails').classList.toggle('active', e.target.checked);
+        });
+        
+        document.getElementById('addEventBtn').addEventListener('click', () => {
+          const bar = document.getElementById('eventBar').value;
+          const eventDate = document.getElementById('eventDate').value;
+          const title = document.getElementById('eventTitle').value.trim();
+          const time = document.getElementById('eventTime').value.trim();
+          const isRecurring = document.getElementById('recurringCheckbox').checked;
+          const frequency = document.getElementById('recurringFrequency').value;
+          const endDate = document.getElementById('recurringEndDate').value;
+          
+          if (!title || !eventDate) {
+            Utils.showToast('Please enter title and date', 'error');
+            return;
+          }
+          
+          if (isRecurring && !endDate) {
+            Utils.showToast('Please select end date for recurring event', 'error');
+            return;
+          }
+          
+          const addEvent = (dateStr) => {
+            const d = new Date(dateStr + 'T12:00:00');
+            const day = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+            const mon = getMonday(d);
+            const wk = `${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
+            if (!AppState.eventsData[wk]) AppState.eventsData[wk] = {};
+            const key = `${bar}-${day}-Events`;
+            if (!AppState.eventsData[wk][key]) AppState.eventsData[wk][key] = [];
+            AppState.eventsData[wk][key].push({id: Utils.generateId(), title, time});
+          };
+          
+          if (isRecurring) {
+            let curr = new Date(eventDate + 'T12:00:00');
+            const end = new Date(endDate + 'T12:00:00');
+            let count = 0;
+            while (curr <= end) {
+              addEvent(curr.toISOString().split('T')[0]);
+              count++;
+              if (frequency === 'weekly') curr.setDate(curr.getDate() + 7);
+              else if (frequency === 'biweekly') curr.setDate(curr.getDate() + 14);
+              else curr.setMonth(curr.getMonth() + 1);
+            }
+            Utils.showToast(`Added ${count} recurring events!`);
+          } else {
+            addEvent(eventDate);
+            Utils.showToast('Event added!');
+          }
+          
+          Storage.save();
+          this.renderSchedule();
+          Calendar.render();
+          document.getElementById('eventTitle').value = '';
+          document.getElementById('eventTime').value = '';
+          document.getElementById('eventDate').value = '';
+          document.getElementById('recurringCheckbox').checked = false;
+          document.getElementById('recurringDetails').classList.remove('active');
+        });;
+        
+        document.getElementById('dayStaff').addEventListener('input', (e) => {
+          document.getElementById('dayStaffValue').textContent = `${e.target.value} staff`;
+          AppState.settings.dayStaffTarget = parseInt(e.target.value);
+        });
+        document.getElementById('nightStaff').addEventListener('input', (e) => {
+          document.getElementById('nightStaffValue').textContent = `${e.target.value} staff`;
+          AppState.settings.nightStaffTarget = parseInt(e.target.value);
+        });
+        document.getElementById('autoScheduleBtn').addEventListener('click', () => {
+          if (confirm('Generate auto-schedule? This will replace current assignments.')) {
+            Scheduler.autoSchedule();
+          }
+        });
+        document.getElementById('copyPrevBtn').addEventListener('click', () => {
+          Scheduler.copyPreviousWeek();
+        });
+        document.getElementById('clearWeekBtn').addEventListener('click', () => {
+          if (confirm('Clear all assignments for this week?')) {
+            const weekKey = Utils.getWeekKey();
+            AppState.scheduleData[weekKey] = {};
+            AppState.eventsData[weekKey] = {};
+            Utils.saveToHistory();
+            Storage.save();
+            this.renderSchedule();
+            this.updateAnalytics();
+            this.renderStaffAvailability();
+            this.detectAndShowConflicts();
+            Utils.showToast('Week cleared!');
+          }
+        });
+        document.getElementById('printBtn').addEventListener('click', () => {
+          this.printSchedule();
+        });
+        document.getElementById('sendScheduleBtn').addEventListener('click', () => {
+          this.sendSchedule();
+        });
+        document.getElementById('resetDataBtn').addEventListener('click', () => {
+          if (confirm('Reset all data to defaults? This cannot be undone!')) {
+            localStorage.removeItem('barSchedulerData');
+            window.appData = null;
+            AppState.scheduleData = {};
+            AppState.staffData = [];
+            AppState.staffPreferences = {};
+            AppState.eventsData = {};
+            AppState.vacationsData = [];
+            AppState.settings = { dayStaffTarget: 2, nightStaffTarget: 3 };
+            Storage.loadDefaults();
+            Storage.save();
+            this.renderWeek();
+            this.renderSchedule();
+            this.renderStaffList();
+            this.populateSelects();
+            this.updateAnalytics();
+            Vacations.render();
+            Preferences.render();
+            Utils.showToast('Data reset to defaults!');
+          }
+        });
+        document.getElementById('addStaffBtn').addEventListener('click', () => {
+          const name = document.getElementById('newName').value.trim();
+          const role = document.getElementById('newRole').value;
+          const bar = document.getElementById('newBar').value;
+          if (!name) {
+            Utils.showToast('Please enter a name', 'error');
+            return;
+          }
+          const newStaff = { id: Utils.generateId(), name, role, bar };
+          AppState.staffData.push(newStaff);
+          Utils.saveToHistory();
+          Storage.save();
+          this.renderStaffList();
+          this.populateSelects();
+          this.updateAnalytics();
+          this.renderStaffAvailability();
+          Preferences.render();
+          Utils.showToast(`${name} added!`);
+          document.getElementById('newName').value = '';
+        });
+        
+        document.getElementById('prefStaff').addEventListener('change', (e) => {
+          const staffId = e.target.value;
+          if (staffId) {
+            Preferences.loadPreferenceForm(staffId);
+          }
+        });
+        
+        document.getElementById('savePrefBtn').addEventListener('click', () => {
+          const staffId = document.getElementById('prefStaff').value;
+          if (!staffId) {
+            Utils.showToast('Please select a staff member', 'error');
+            return;
+          }
+          Preferences.save(staffId);
+          
+          const staff = AppState.staffData.find(s => s.id === staffId);
+          Utils.showToast(`Preferences saved for ${staff.name}!`);
+        });
+
+        
+        document.getElementById('deletePrefBtn').addEventListener('click', () => {
+          const staffId = document.getElementById('prefStaff').value;
+          if (!staffId) {
+            Utils.showToast('Please select a staff member', 'error');
+            return;
+          }
+          if (confirm('Clear all preferences for this staff member?')) {
+            Preferences.deletePreferences(staffId);
+          }
+        });
+        
+        document.getElementById('addVacationBtn').addEventListener('click', () => {
+          const staffId = document.getElementById('vacStaff').value;
+          const startDate = document.getElementById('vacStartDate').value;
+          const endDate = document.getElementById('vacEndDate').value;
+          const reason = document.getElementById('vacReason').value.trim();
+          
+          if (!staffId) {
+            Utils.showToast('Please select a staff member', 'error');
+            return;
+          }
+          if (!startDate || !endDate) {
+            Utils.showToast('Please select start and end dates', 'error');
+            return;
+          }
+          if (new Date(startDate) > new Date(endDate)) {
+            Utils.showToast('End date must be after start date', 'error');
+            return;
+          }
+          
+          Vacations.add(staffId, startDate, endDate, reason);
+          document.getElementById('vacStartDate').value = '';
+          document.getElementById('vacEndDate').value = '';
+          document.getElementById('vacReason').value = '';
+        });
+        
+        document.getElementById('prevMonthBtn').addEventListener('click', () => {
+          Calendar.prevMonth();
+        });
+        document.getElementById('nextMonthBtn').addEventListener('click', () => {
+          Calendar.nextMonth();
+        });
+        
+        document.getElementById('vacPrevMonthBtn').addEventListener('click', () => {
+          VacationCalendar.prevMonth();
+        });
+        document.getElementById('vacNextMonthBtn').addEventListener('click', () => {
+          VacationCalendar.nextMonth();
+        });
+      }
+    };
+
+    // Embedded data - this will be populated when you export
+    window.appData = null;
+
+    // Initialize app when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load Firebase immediately for authentication
+      initializeFirebase();
+    });
+    
+    // Firebase initialization (loads Auth first, then Database)
+    function initializeFirebase() {
+      // Load Firebase scripts dynamically
+      const script1 = document.createElement('script');
+      script1.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js';
+      script1.onload = function() {
+        // Load Auth SDK
+        const script2 = document.createElement('script');
+        script2.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js';
+        script2.onload = function() {
+          // Load Database SDK
+          const script3 = document.createElement('script');
+          script3.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js';
+          script3.onload = function() {
+            setupFirebaseAuth();
+          };
+          script3.onerror = function() {
+            console.error('Failed to load Firebase Database SDK');
+          };
+          document.head.appendChild(script3);
+        };
+        script2.onerror = function() {
+          console.error('Failed to load Firebase Auth SDK');
+        };
+        document.head.appendChild(script2);
+      };
+      script1.onerror = function() {
+        console.error('Failed to load Firebase App SDK');
+      };
+      document.head.appendChild(script1);
+    }
+    
+    function setupFirebaseAuth() {
+      try {
+        const firebaseConfig = {
+          apiKey: "AIzaSyDwbdwkjG3yI4xF5TaM7_XAQp004llNhO8",
+          authDomain: "bar-scheduler.firebaseapp.com",
+          databaseURL: "https://bar-scheduler-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "bar-scheduler",
+          storageBucket: "bar-scheduler.firebasestorage.app",
+          messagingSenderId: "780189773784",
+          appId: "1:780189773784:web:a761451f3df6c618334cad"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        firebaseAuth = firebase.auth();
+        
+        console.log('Firebase Auth initialized');
+        
+        // Listen for authentication state changes
+        firebaseAuth.onAuthStateChanged((user) => {
+          if (user) {
+            // User is signed in
+            currentUser = user;
+            console.log('User authenticated:', user.email);
+            showApp();
+            
+            // Initialize app
+            Storage.load();
+            UI.init();
+            
+            // Set up database sync
+            setupFirebaseDatabase();
+          } else {
+            // User is signed out
+            currentUser = null;
+            console.log('User not authenticated');
+            showLogin();
+          }
+        });
+        
+      } catch (error) {
+        console.error('Firebase Auth setup error:', error);
+        alert('Authentication system failed to load. Please refresh the page.');
+      }
+    }
+    
+    function setupFirebaseDatabase() {
+      try {
+        const database = firebase.database();
+        console.log('Firebase Database connected - enabling cloud sync');
+        
+        // Override Storage.save to also save to Firebase
+        const originalSave = Storage.save;
+        Storage.save = function() {
+          originalSave.call(this);
+          const data = {
+            scheduleData: AppState.scheduleData,
+            staffData: AppState.staffData,
+            staffPreferences: AppState.staffPreferences,
+            eventsData: AppState.eventsData,
+            vacationsData: AppState.vacationsData,
+            settings: AppState.settings
+          };
+          database.ref('barSchedulerData').set(data).catch(err => {
+            console.error('Firebase sync error:', err);
+          });
+        };
+        
+        // Check if Firebase has newer data
+        database.ref('barSchedulerData').once('value').then(snapshot => {
+          const data = snapshot.val();
+          if (data) {
+            const localData = localStorage.getItem('barSchedulerData');
+            if (!localData) {
+              // No local data, load from cloud
+              AppState.scheduleData = data.scheduleData || {};
+              AppState.staffData = data.staffData || [];
+              AppState.staffPreferences = data.staffPreferences || {};
+              AppState.eventsData = data.eventsData || {};
+              AppState.vacationsData = data.vacationsData || [];
+              AppState.settings = data.settings || { dayStaffTarget: 2, nightStaffTarget: 3 };
+              Storage.save();
+              UI.init();
+              Utils.showToast('Loaded from cloud!', 'success');
+            }
+          } else {
+            // No cloud data, upload current data
+            Storage.save();
+          }
+        });
+        
+        // Real-time sync from other devices
+        database.ref('barSchedulerData').on('value', snapshot => {
+          const data = snapshot.val();
+          if (data) {
+            const currentData = JSON.stringify({
+              scheduleData: AppState.scheduleData,
+              staffData: AppState.staffData
+            });
+            const newData = JSON.stringify({
+              scheduleData: data.scheduleData,
+              staffData: data.staffData
+            });
+            
+            if (currentData !== newData) {
+              AppState.scheduleData = data.scheduleData || {};
+              AppState.staffData = data.staffData || [];
+              AppState.staffPreferences = data.staffPreferences || {};
+              AppState.eventsData = data.eventsData || {};
+              AppState.vacationsData = data.vacationsData || [];
+              AppState.settings = data.settings || { dayStaffTarget: 2, nightStaffTarget: 3 };
+              Storage.save();
+              UI.init();
+              Utils.showToast('Updated from another device', 'info');
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error('Firebase Database setup error:', error);
+      }
+    }
+  </script>
+</body>
+</html>
